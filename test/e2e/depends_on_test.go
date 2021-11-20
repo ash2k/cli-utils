@@ -36,9 +36,11 @@ func dependsOnTest(ctx context.Context, c client.Client, invConfig InventoryConf
 		pod3Obj,
 	}
 
-	applierEvents := runCollect(applier.Run(ctx, inv, resources, apply.Options{
-		EmitStatusEvents: false,
-	}))
+	var applierEvents []event.Event
+	applier.Apply(ctx, inv, resources, apply.NewOptions().
+		EmitStatusEvents(false).
+		CollectEventsInto(&applierEvents),
+	)
 
 	expEvents := []testutil.ExpEvent{
 		{

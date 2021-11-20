@@ -387,7 +387,10 @@ func newApplierFromInvFactory(invFactory inventory.InventoryClientFactory) *appl
 	invClient, err := invFactory.NewInventoryClient(f)
 	Expect(err).NotTo(HaveOccurred())
 
-	a, err := apply.NewApplier(f, invClient)
+	a, err := apply.NewBuilder().
+		WithFactory(f).
+		WithInventoryClient(invClient).
+		New()
 	Expect(err).NotTo(HaveOccurred())
 	return a
 }

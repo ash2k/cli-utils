@@ -133,20 +133,30 @@ func (r *PreviewRunner) RunE(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		a, err := apply.NewApplier(r.factory, invClient)
+		a, err := apply.NewBuilder().
+			WithFactory(r.factory).
+			WithInventoryClient(invClient).
+			New()
 		if err != nil {
 			return err
 		}
 
+		eventChan := make(chan event.Event)
+		ch = eventChan
+
 		// Run the applier. It will return a channel where we can receive updates
 		// to keep track of progress and any issues.
-		ch = a.Run(ctx, inv, objs, apply.Options{
-			EmitStatusEvents:  false,
-			NoPrune:           noPrune,
-			DryRunStrategy:    drs,
-			ServerSideOptions: r.serverSideOptions,
-			InventoryPolicy:   inventoryPolicy,
-		})
+		go func() {
+			defer close(eventChan)
+			a.Apply(ctx, inv, objs, apply.NewOptions().
+				EmitStatusEvents(false).
+				Prune(!noPrune).
+				DryRunStrategy(drs).
+				ServerSideOptions(r.serverSideOptions).
+				InventoryPolicy(inventoryPolicy).
+				EventChannelListener(eventChan),
+			)
+		}()
 	} else {
 		d, err := apply.NewDestroyer(r.factory, invClient)
 		if err != nil {

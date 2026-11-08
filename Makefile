@@ -82,7 +82,7 @@ test:
 test-e2e:
 	$(GO_TOOL) kind delete cluster --name=cli-utils-e2e && $(GO_TOOL) kind create cluster --name=cli-utils-e2e --wait 5m
 	$(GINKGO) -v ./test/e2e/... -- -v 3
-	kind delete cluster --name=cli-utils-e2e
+	$(GO_TOOL) kind delete cluster --name=cli-utils-e2e
 
 .PHONY: test-e2e-focus
 test-e2e-focus:
